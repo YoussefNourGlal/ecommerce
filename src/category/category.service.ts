@@ -52,7 +52,7 @@ export class CategoryService {
       _id: new Types.ObjectId(id),
       createdBy: body.createdBy,
     });
-    if (!category) return new NotFoundException('category Not Found');
+    if (!category) return new NotFoundException('category Not Found sorry!');
 
     if (body.name) category.name = body.name;
     if (body.image) category.image = body.image;
