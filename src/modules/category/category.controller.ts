@@ -18,6 +18,7 @@ import { UpdateCategoryDto } from './dto/update-category.dto';
 import { AuthGuard } from 'src/common/guard/auth.guard';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { multerImageConfig } from 'src/common/utiles/multer/multer';
+import { type Request } from 'express';
 
 @Controller('category')
 export class CategoryController {
@@ -29,12 +30,12 @@ export class CategoryController {
   create(
     @Body(new ValidationPipe()) createCategoryDto: CreateCategoryDto,
     @UploadedFile() file: Express.Multer.File,
-    @Req() req: any,
+    @Req() req: Request,
   ) {
     if (file) {
       createCategoryDto.image = `category/${file.filename}`;
     }
-    createCategoryDto.createdBy = req.user._id;
+    createCategoryDto.createdBy = req.user?._id;
     return this.categoryService.create(createCategoryDto);
   }
 
@@ -57,19 +58,19 @@ export class CategoryController {
     @Param('id') id: string,
     @Body(new ValidationPipe()) updateCategoryDto: UpdateCategoryDto,
     @UploadedFile() file: Express.Multer.File,
-    @Req() req: any,
+    @Req() req: Request,
   ) {
     if (file) {
       updateCategoryDto.image = `brands/${file.filename}`;
     }
-    updateCategoryDto.createdBy = req.user._id;
+    updateCategoryDto.createdBy = req.user?._id;
 
     return this.categoryService.update(id, updateCategoryDto);
   }
 
   @Delete(':id')
   @UseGuards(AuthGuard)
-  remove(@Param('id') id: string, @Req() req: any) {
+  remove(@Param('id') id: string, @Req() req:Request) {
     return this.categoryService.remove(id, req);
   }
 }

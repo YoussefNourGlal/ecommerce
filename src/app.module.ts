@@ -3,14 +3,17 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ConfigModule } from '@nestjs/config';
 import { resolve } from 'path';
-import { UsersModule } from './users/users.module';
-import { ProductsModule } from './products/products.module';
-import { AuthModule } from './auth/auth.module';
 import { MongooseModule } from '@nestjs/mongoose';
 import { Connection } from 'mongoose';
 import { PreAuthMiddleware } from './middleWare/preAuth';
-import { BrandModule } from './brand/brand.module';
-import { CategoryModule } from './category/category.module';
+import { UsersModule } from './modules/users/users.module';
+import { ProductsModule } from './modules/products/products.module';
+import { AuthModule } from './modules/auth/auth.module';
+import { BrandModule } from './modules/brand/brand.module';
+import { CategoryModule } from './modules/category/category.module';
+import { CartModule } from './modules/cart/cart.module';
+import { CouponModule } from './modules/coupon/coupon.module';
+import { OrderModule } from './modules/order/order.module';
 
 @Module({
   imports: [
@@ -27,7 +30,10 @@ import { CategoryModule } from './category/category.module';
     connection.on('connected', () => console.log('connected'));}
     }),
     BrandModule,
-    CategoryModule
+    CategoryModule,
+    CartModule,
+    CouponModule,
+    OrderModule
   ],
   controllers: [AppController],
   providers: [AppService],

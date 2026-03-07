@@ -15,6 +15,7 @@ import {
   HCategoryDocument,
 } from 'src/DB/models/category';
 import { Types } from 'mongoose';
+import { Request } from 'express';
 
 @Injectable()
 export class CategoryService {
@@ -61,7 +62,7 @@ export class CategoryService {
       const brands = Array.isArray(body.brands) ? body.brands : [body.brands];
       if (body.action == ActionEnum.add) {
         await this.categoryModel.updateOne(
-          { _id: id },
+          { _id:id },
           { $addToSet: { brands: { $each: brands } } },
         );
       } else {
@@ -76,10 +77,10 @@ export class CategoryService {
     return { message: 'updated successfuly' };
   }
 
-  async remove(id: string, req: any) {
+  async remove(id: string, req: Request) {
     const category = await this.categoryModel.findOne({
       _id: new Types.ObjectId(id),
-      createdBy: req.user._id,
+      createdBy: req.user?._id,
     });
     if (!category) return new NotFoundException('category Not Found');
     await this.categoryModel.deleteOne({ _id: id });

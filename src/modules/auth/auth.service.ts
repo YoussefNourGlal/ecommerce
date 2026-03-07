@@ -110,18 +110,14 @@ export class AuthService {
     };
   }
 
-
-  async getProfile(req:any) {
-   
+  async getProfile(req: any) {
     return {
-     data: req.user,
-      message: 'done',
+      data: req.user,
+      message: 'done', 
     };
   }
 
-
-  async uploadfile(files:Array< Express.Multer.File>) {
-  return { message: "File Uplaoded Successfully", data: files };
+  async uploadfile(files: Array<Express.Multer.File>) {
+    return { message: 'File Uplaoded Successfully', data: files };
   }
-
 }
