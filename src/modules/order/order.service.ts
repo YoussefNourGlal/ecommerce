@@ -153,7 +153,7 @@ export class OrderService {
   async refund(orderId: string) {
     const order = await this.orderModel.findById(orderId);
 
-    if (!order) throw new NotFoundException();
+    if (!order) throw new NotFoundException("order not found");
 
     const refund = await this.stripeServ.createRefund(order.paymentIntentId);
 
