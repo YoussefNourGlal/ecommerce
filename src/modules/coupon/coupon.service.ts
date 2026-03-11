@@ -40,7 +40,7 @@ export class CouponService {
       code: ApllyCoupon.code,
       isActive: true,
     });
-    if (!coupon) throw new ConflictException('Coupon Already Exists');
+    if (!coupon) throw new ConflictException('Coupon not Exists');
 
     const currentDate = new Date();
 

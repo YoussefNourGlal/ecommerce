@@ -99,6 +99,14 @@ export class Order implements Iorder {
     required: true,
   })
   items: OrderItem[];
+
+@Prop({
+  type:String
+})
+paymentIntentId : string;
+
+
+
 }
 
 export const orderSchema = SchemaFactory.createForClass(Order);

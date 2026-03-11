@@ -9,10 +9,12 @@ import { productModel } from 'src/DB/models/product';
 import { UserModel } from 'src/DB/models/user';
 import { orderModel } from 'src/DB/models/order';
 import { JwtService } from '@nestjs/jwt';
+import { StripeService } from 'src/stripe/stripe.service';
+
 
 @Module({
   imports:[BrandModel,coupontModel,OtpModel,CartModel,productModel,UserModel,orderModel],
   controllers: [OrderController],
-  providers: [OrderService,JwtService],
+  providers: [OrderService,JwtService,StripeService],
 })
 export class OrderModule {}

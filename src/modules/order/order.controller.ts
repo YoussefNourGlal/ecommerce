@@ -11,7 +11,7 @@ import {
   Req,
 } from '@nestjs/common';
 import { OrderService } from './order.service';
-import { CreateOrderDto } from './dto/create-order.dto';
+import { CreateOrderDto, idOrderDto } from './dto/create-order.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
 import { AuthGuard } from 'src/common/guard/auth.guard';
 import { type Request } from 'express';
@@ -45,4 +45,25 @@ export class OrderController {
   ) {
     return this.orderService.updateAdress(req, updateOrderDto);
   }
+
+  @Post('checkout')
+  @UseGuards(AuthGuard)
+  payWithStripe(
+    @Body(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }))
+    idOrderDto: idOrderDto,
+  ) {
+    return this.orderService.payWithStripe(idOrderDto.id);
+  }
+
+@Post('refund')
+  @UseGuards(AuthGuard)
+  refund(
+    @Body(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }))
+    idOrderDto: idOrderDto,
+  ) {
+    return this.orderService.refund(idOrderDto.id);
+  }
+
+
+
 }

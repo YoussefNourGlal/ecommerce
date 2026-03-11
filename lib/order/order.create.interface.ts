@@ -18,6 +18,8 @@ export enum OrderStatus {
   PAID = 'paid',
   SHIPPED = 'shipped',
   DELIVERED = 'delivered',
+  REFUND_PENDING='refunded_pending',
+  REFUNDED='refunded',
   CANCELLED = 'cancelled',
 }
 

@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
 import { Request } from 'express';
@@ -6,9 +10,15 @@ import { InjectModel } from '@nestjs/mongoose';
 import { HOrderDocument, Order } from 'src/DB/models/order';
 import { Model, Types } from 'mongoose';
 import { Cart, HCartDocument } from 'src/DB/models/cart';
-import { ICreateOrderItem, OrderStatus } from 'lib/order/order.create.interface';
+import {
+  ICreateOrderItem,
+  OrderStatus,
+  PaymentMethod,
+} from 'lib/order/order.create.interface';
 import { HProductDocument, Product } from 'src/DB/models/product';
 import { tax } from 'lib/order/order.interface';
+import Stripe from 'stripe';
+import { StripeService } from '../../stripe/stripe.service';
 
 @Injectable()
 export class OrderService {
@@ -19,6 +29,7 @@ export class OrderService {
     private readonly cartModel: Model<HCartDocument>,
     @InjectModel(Product.name)
     private readonly productModel: Model<HProductDocument>,
+    private readonly stripeServ: StripeService,
   ) {}
 
   async create(createOrderDto: CreateOrderDto, req: Request) {
@@ -57,37 +68,95 @@ export class OrderService {
         { $inc: { quantity: -item.quantity } },
       );
     }
-    await this.cartModel.deleteOne({user:req.user?._id});
+    await this.cartModel.deleteOne({ user: req.user?._id });
 
     return order;
   }
 
- async cancelOrder(req:Request) {
- let order= await this.orderModel.findOne({user:req.user?._id});
-if(!order){
-  throw new BadRequestException("sorry the order not found");
-}
- if(order?.orderStatus==OrderStatus.CANCELLED||order?.orderStatus==OrderStatus.DELIVERED||order?.orderStatus==OrderStatus.SHIPPED)
-throw new BadRequestException("sorry cant cancel the order");
- order.orderStatus=OrderStatus.CANCELLED;
-await order.save();
-return{message:"canceled succcesssfully"};
-
+  async cancelOrder(req: Request) {
+    let order = await this.orderModel.findOne({ user: req.user?._id });
+    if (!order) {
+      throw new BadRequestException('sorry the order not found');
+    }
+    if (
+      order?.orderStatus == OrderStatus.CANCELLED ||
+      order?.orderStatus == OrderStatus.DELIVERED ||
+      order?.orderStatus == OrderStatus.SHIPPED
+    )
+      throw new BadRequestException('sorry cant cancel the order');
+    order.orderStatus = OrderStatus.CANCELLED;
+    await order.save();
+    return { message: 'canceled succcesssfully' };
   }
 
-  
- async updateAdress(req:Request,UpdateCartDto:UpdateOrderDto) {
- let order= await this.orderModel.findOne({user:req.user?._id});
-if(!order){
-  throw new BadRequestException("sorry the order not found");
-}
- if(order?.orderStatus==OrderStatus.CANCELLED||order?.orderStatus==OrderStatus.DELIVERED||order?.orderStatus==OrderStatus.SHIPPED)
-throw new BadRequestException("sorry cant update the adress of order");
- if(!UpdateCartDto.address) throw new BadRequestException("sorry cant update the adress of order");
- order.address=UpdateCartDto.address;
-await order.save();
-return{message:"updated succcesssfully"};
-
+  async updateAdress(req: Request, UpdateCartDto: UpdateOrderDto) {
+    let order = await this.orderModel.findOne({ user: req.user?._id });
+    if (!order) {
+      throw new BadRequestException('sorry the order not found');
+    }
+    if (
+      order?.orderStatus == OrderStatus.CANCELLED ||
+      order?.orderStatus == OrderStatus.DELIVERED ||
+      order?.orderStatus == OrderStatus.SHIPPED
+    )
+      throw new BadRequestException('sorry cant update the adress of order');
+    if (!UpdateCartDto.address)
+      throw new BadRequestException('sorry cant update the adress of order');
+    order.address = UpdateCartDto.address;
+    await order.save();
+    return { message: 'updated succcesssfully' };
   }
 
+  async updateOrderStatus(orderId: string) {
+    const order = await this.orderModel.findById(orderId);
+
+    if (!order) return;
+
+    order.orderStatus = OrderStatus.PAID;
+
+    await order.save();
+  }
+
+  async payWithStripe(orderId: string) {
+    const order = await this.orderModel
+      .findOne({
+        _id: new Types.ObjectId(orderId),
+        orderStatus: OrderStatus.PENDING,
+      })
+      .populate('items');
+
+    if (!order || order.items.length == 0)
+      throw new NotFoundException('Order Not Found');
+
+    const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] =
+      order.items.map(function (item) {
+        let priceWithTax = item.price + item.price * tax;
+        return {
+          price_data: {
+            currency: 'egp',
+            product_data: {
+              name: item.title,
+              images: [
+                'https://static0.pocketlintimages.com/wordpress/wp-content/uploads/wm/2023/09/iphone-15-pro-max-review-4-1.jpg?w=1600&h=900&fit=crop',
+              ],
+            },
+            unit_amount: priceWithTax * 100,
+          },
+          quantity: item.quantity,
+        };
+      });
+
+    let session = await this.stripeServ.checkOut(lineItems, orderId);
+    return session;
+  }
+
+  async refund(orderId: string) {
+    const order = await this.orderModel.findById(orderId);
+
+    if (!order) throw new NotFoundException();
+
+    const refund = await this.stripeServ.createRefund(order.paymentIntentId);
+
+    return refund;
+  }
 }

@@ -14,6 +14,7 @@ import { CategoryModule } from './modules/category/category.module';
 import { CartModule } from './modules/cart/cart.module';
 import { CouponModule } from './modules/coupon/coupon.module';
 import { OrderModule } from './modules/order/order.module';
+import { StripeModule } from './stripe/stripe.module';
 
 @Module({
   imports: [
@@ -24,26 +25,24 @@ import { OrderModule } from './modules/order/order.module';
     UsersModule,
     ProductsModule,
     AuthModule,
-    MongooseModule.forRoot("mongodb://localhost:27017/ECommerce",{
-      serverSelectionTimeoutMS:3000,
-       onConnectionCreate: (connection: Connection) => {
-    connection.on('connected', () => console.log('connected'));}
+    MongooseModule.forRoot('mongodb://localhost:27017/ECommerce', {
+      serverSelectionTimeoutMS: 3000,
+      onConnectionCreate: (connection: Connection) => {
+        connection.on('connected', () => console.log('connected'));
+      },
     }),
     BrandModule,
     CategoryModule,
     CartModule,
     CouponModule,
-    OrderModule
+    OrderModule,
+    StripeModule,
   ],
   controllers: [AppController],
   providers: [AppService],
 })
 export class AppModule implements NestModule {
-   configure(consumer: MiddlewareConsumer) {
-    consumer
-      .apply(PreAuthMiddleware)
-      .forRoutes('auth');
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(PreAuthMiddleware).forRoutes('auth');
   }
-
-
 }
